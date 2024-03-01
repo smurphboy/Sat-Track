@@ -1,6 +1,8 @@
+import math
 import requests
 from skyfield.api import Topos, load, wgs84, utc
 import matplotlib.pyplot as plt
+import numpy as np
 from datetime import datetime
 
 def download_tles(url, filename):
@@ -33,18 +35,17 @@ def plot_satellite_pass(observer, satellite, start_time, end_time):
         t = datetime.strptime(t, '%Y-%m-%dT%H:%M:%S') + timedelta(seconds=1)
         t = ts.utc(t.replace(tzinfo=utc))
 
+    print(azimuths, elevations, times)
+
     fig, ax = plt.subplots(subplot_kw={'projection': 'polar'})
-    ax.plot(azimuths, elevations)
+    ax.plot(np.deg2rad(azimuths), elevations)
     ax.grid(True)
-    # plt.figure(figsize=(10, 6))
-    # plt.plot(times, azimuths, label='Azimuth')
-    # plt.plot(times, elevations, label='Elevation')
-    plt.title('Satellite Pass Prediction')
-    # plt.xlabel('Time (UTC)')
-    # plt.ylabel('Angle (degrees)')
-    # plt.legend()
-    # plt.xticks(rotation=45)
-    # plt.tight_layout()
+    ax.set_rlim(bottom=90, top=0)
+    ax.set_theta_zero_location("N")
+    ax.set_theta_direction(-1)
+    titlestring = f"Satellite Pass Prediction for {satellite.name} starting {start_time}"
+    plt.title(titlestring)
+
     plt.show()
 
 if __name__ == "__main__":
@@ -70,7 +71,8 @@ if __name__ == "__main__":
     satellite = next((x for x in satellites if x.name == satellite_name), None)
 
     # Replace with the start and end time of the observation window
-    start_time = datetime.utcnow()
-    end_time = start_time + timedelta(minutes=1)
+    # start_time = datetime.utcnow()
+    start_time = datetime(2024, 3, 2, 0, 15, 21, 0)
+    end_time = start_time + timedelta(minutes=10)
 
     plot_satellite_pass(claverham, satellite, start_time, end_time)
