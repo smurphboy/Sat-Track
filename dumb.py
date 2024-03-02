@@ -14,6 +14,16 @@ def load_tles(filename):
     satellites = load.tle_file(filename)
     return satellites
 
+def find_satellite_passes(satellite, observer, start_time, end_time, altitude_degrees=30):
+    ts = load.timescale()
+    t0 = ts.utc(start_time.year, start_time.month, start_time.day)
+    t1 = ts.utc(end_time.year, end_time.month, end_time.day)
+    t, events = satellite.find_events(observer, t0, t1, altitude_degrees)
+    event_names = 'rise above 30°', 'culminate', 'set below 30°'
+    for ti, event in zip(t, events):
+        name = event_names[event]
+        print(ti.utc_strftime('%Y %b %d %H:%M:%S'), name)
+
 def plot_satellite_pass(observer, satellite, start_time, end_time):
     times, azimuths, elevations = [], [], []
 
@@ -35,7 +45,7 @@ def plot_satellite_pass(observer, satellite, start_time, end_time):
         t = datetime.strptime(t, '%Y-%m-%dT%H:%M:%S') + timedelta(seconds=1)
         t = ts.utc(t.replace(tzinfo=utc))
 
-    print(azimuths, elevations, times)
+    # print(azimuths, elevations, times)
 
     fig, ax = plt.subplots(subplot_kw={'projection': 'polar'})
     ax.plot(np.deg2rad(azimuths), elevations)
@@ -72,7 +82,15 @@ if __name__ == "__main__":
 
     # Replace with the start and end time of the observation window
     # start_time = datetime.utcnow()
+    # start_time = datetime(2024, 3, 2, 0, 15, 21, 0)
+    # end_time = start_time + timedelta(minutes=10)
+
+    # we want satellite passes for the next two days
+    start_time = datetime.utcnow()
+    end_time = start_time + timedelta(days=2)
+
+    find_satellite_passes(satellite, claverham, start_time, end_time, 30)
+
     start_time = datetime(2024, 3, 2, 0, 15, 21, 0)
     end_time = start_time + timedelta(minutes=10)
-
     plot_satellite_pass(claverham, satellite, start_time, end_time)

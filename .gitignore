@@ -177,3 +177,6 @@ pyrightconfig.json
 
 # project temp files
 stations.tle
+
+# vscode stuff
+.vscode/
