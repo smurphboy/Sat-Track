@@ -14,25 +14,29 @@ def load_tles(filename):
     satellites = load.tle_file(filename)
     return satellites
 
-def find_satellite_passes(satellite, observer, start_time, end_time, altitude_degrees=30):
+def find_satellite_passes(satellite, observer, start_time, end_time, altitude_degrees=5):
     ts = load.timescale()
     t0 = ts.utc(start_time.year, start_time.month, start_time.day)
     t1 = ts.utc(end_time.year, end_time.month, end_time.day)
     t, events = satellite.find_events(observer, t0, t1, altitude_degrees)
-    event_names = 'rise above 30°', 'culminate', 'set below 30°'
+    event_names = 'rise above 5°', 'culminate', 'set below 5°'
     for ti, event in zip(t, events):
         name = event_names[event]
         print(ti.utc_strftime('%Y %b %d %H:%M:%S'), name)
+        if event==0:
+            starts.append(ti)
+        if event==2:
+            ends.append(ti)
 
-def plot_satellite_pass(observer, satellite, start_time, end_time):
+def plot_satellite_pass(observer, satellite, t, end_t):
     times, azimuths, elevations = [], [], []
 
     ts = load.timescale()
-    t = ts.utc(start_time.year, start_time.month, start_time.day,
-               start_time.hour, start_time.minute, start_time.second)
+    # t = ts.utc(start_time.year, start_time.month, start_time.day,
+    #            start_time.hour, start_time.minute, start_time.second)
 
-    end_t = ts.utc(end_time.year, end_time.month, end_time.day,
-                   end_time.hour, end_time.minute, end_time.second)
+    # end_t = ts.utc(end_time.year, end_time.month, end_time.day,
+    #                end_time.hour, end_time.minute, end_time.second)
 
     while t < end_t:
         difference = satellite - observer
@@ -88,9 +92,7 @@ if __name__ == "__main__":
     # we want satellite passes for the next two days
     start_time = datetime.utcnow()
     end_time = start_time + timedelta(days=2)
-
-    find_satellite_passes(satellite, claverham, start_time, end_time, 30)
-
-    start_time = datetime(2024, 3, 2, 0, 15, 21, 0)
-    end_time = start_time + timedelta(minutes=10)
-    plot_satellite_pass(claverham, satellite, start_time, end_time)
+    starts = []
+    ends = []
+    find_satellite_passes(satellite, claverham, start_time, end_time, 5)
+    plot_satellite_pass(claverham, satellite, starts[1], ends[1])
