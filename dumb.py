@@ -1,20 +1,36 @@
-import math
+'''
+Returns the next good pass of ISS over Claverham. Needs abstracting to
+allow user to select location, satellite and time range and
+elevation minimum for passes
+'''
+
+from datetime import datetime, timedelta
 import requests
-from skyfield.api import Topos, load, wgs84, utc
+from skyfield.api import load, wgs84, utc
 import matplotlib.pyplot as plt
 import numpy as np
-from datetime import datetime
 
 def download_tles(url, filename):
-    response = requests.get(url)
+    '''
+    Opens filename for use in load_tles
+    '''
+    response = requests.get(url, timeout=10)
     with open(filename, 'wb') as file:
         file.write(response.content)
 
 def load_tles(filename):
-    satellites = load.tle_file(filename)
-    return satellites
+    '''
+    Returns TLEs from filename
+    '''
+    sats = load.tle_file(filename)
+    return sats
 
 def find_satellite_passes(satellite, observer, start_time, end_time, altitude_degrees=5):
+    '''Returns satellite passes for selected sat, observer between start and end time and
+    above the minimum elevation'''
+    names = []
+    starts = []
+    ends = []
     ts = load.timescale()
     t0 = ts.utc(start_time.year, start_time.month, start_time.day)
     t1 = ts.utc(end_time.year, end_time.month, end_time.day)
@@ -22,13 +38,18 @@ def find_satellite_passes(satellite, observer, start_time, end_time, altitude_de
     event_names = 'rise above 5°', 'culminate', 'set below 5°'
     for ti, event in zip(t, events):
         name = event_names[event]
+        names.append((ti.utc_strftime('%Y %b %d %H:%M:%S'), name))
         print(ti.utc_strftime('%Y %b %d %H:%M:%S'), name)
         if event==0:
             starts.append(ti)
         if event==2:
             ends.append(ti)
+    return (names, starts, ends)
 
 def plot_satellite_pass(observer, satellite, t, end_t):
+
+    '''Plots the selected sat pass'''
+
     times, azimuths, elevations = [], [], []
 
     ts = load.timescale()
@@ -37,7 +58,7 @@ def plot_satellite_pass(observer, satellite, t, end_t):
 
     # end_t = ts.utc(end_time.year, end_time.month, end_time.day,
     #                end_time.hour, end_time.minute, end_time.second)
-
+    start_t = t.utc_strftime('on %Y %b %d at %H:%M:%S')
     while t < end_t:
         difference = satellite - observer
         topocentric = difference.at(t)
@@ -57,32 +78,28 @@ def plot_satellite_pass(observer, satellite, t, end_t):
     ax.set_rlim(bottom=90, top=0)
     ax.set_theta_zero_location("N")
     ax.set_theta_direction(-1)
-    titlestring = f"Satellite Pass Prediction for {satellite.name} starting {start_time}"
-    plt.title(titlestring)
-
+    titlestring = f"Satellite Pass Prediction for {satellite.name}\nstarting {start_t}"
+    plt.title(titlestring, wrap=True)
+    fig.tight_layout()
     plt.show()
 
 if __name__ == "__main__":
-    from datetime import timedelta
 
     # Replace with the URL of the TLE source
-    tle_url = "https://www.celestrak.com/NORAD/elements/stations.txt"
+    TLE_URL = "https://www.celestrak.com/NORAD/elements/stations.txt"
 
     # Replace with the desired TLE filename
-    tle_filename = "stations.tle"
+    TLE_FILENAME = "stations.tle"
 
-    download_tles(tle_url, tle_filename)
-    satellites = load_tles(tle_filename)
-
-    # Replace with observer location (latitude, longitude, elevation)
-    #observer_location = Topos(latitude_degrees=51.392028, longitude_degrees=-2.79528, elevation_m=10)
+    download_tles(TLE_URL, TLE_FILENAME)
+    satellites = load_tles(TLE_FILENAME)
     claverham = wgs84.latlon(51.392028,-2.79528)
 
     # Replace with the desired satellite name
-    satellite_name = "ISS (ZARYA)"
+    OUR_SATELLITE_NAME = "ISS (ZARYA)"
 
     #satellite = satellites[name=satellite_name]
-    satellite = next((x for x in satellites if x.name == satellite_name), None)
+    our_satellite = next((x for x in satellites if x.name == OUR_SATELLITE_NAME), None)
 
     # Replace with the start and end time of the observation window
     # start_time = datetime.utcnow()
@@ -90,9 +107,8 @@ if __name__ == "__main__":
     # end_time = start_time + timedelta(minutes=10)
 
     # we want satellite passes for the next two days
-    start_time = datetime.now(utc)
-    end_time = start_time + timedelta(days=2)
-    starts = []
-    ends = []
-    find_satellite_passes(satellite, claverham, start_time, end_time, 5)
-    plot_satellite_pass(claverham, satellite, starts[1], ends[1])
+    our_start_time = datetime.now(utc)
+    our_end_time = our_start_time + timedelta(days=2)
+    our_names, our_starts, our_ends = find_satellite_passes(our_satellite, claverham,
+                                                            our_start_time, our_end_time, 5)
+    plot_satellite_pass(claverham, our_satellite, our_starts[1], our_ends[1])
