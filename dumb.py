@@ -90,7 +90,7 @@ if __name__ == "__main__":
     # end_time = start_time + timedelta(minutes=10)
 
     # we want satellite passes for the next two days
-    start_time = datetime.utcnow()
+    start_time = datetime.now(utc)
     end_time = start_time + timedelta(days=2)
     starts = []
     ends = []
