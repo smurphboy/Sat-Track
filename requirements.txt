@@ -3,3 +3,5 @@ requests==2.32.0
 skyfield==1.48
 kivy[base]
 kivy_examples
+curses-menu
+csv

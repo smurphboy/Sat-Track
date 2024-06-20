@@ -3,9 +3,11 @@ Returns the next good pass of ISS over Claverham. Needs abstracting to
 allow user to select location, satellite and time range and
 elevation minimum for passes
 '''
-
+import csv
 from datetime import datetime, timedelta
 import requests
+from cursesmenu import CursesMenu
+from cursesmenu.items import FunctionItem, SubmenuItem, CommandItem
 from skyfield.api import load, wgs84, utc
 import matplotlib.pyplot as plt
 import numpy as np
@@ -83,8 +85,25 @@ def plot_satellite_pass(observer, satellite, t, end_t):
     fig.tight_layout()
     plt.show()
 
+
+def select_tle():
+    '''reads ./settings/tles.csv and allows user to select a source of TLEs.
+    Returns the URL of the TLEs selected'''
+    
+    with open('./settings/tles.csv', newline='', mode='r') as infile:
+        reader = csv.reader(infile)
+        for rows in reader:
+            tles = {rows[0]:rows[1] for rows in reader}
+
+    menu = CursesMenu.make_selection_menu(list(tles.keys()),"TLE Source", "Select TLE Source and type")
+    menu.show()
+    selection = menu.selected_option
+    print("\033c", end="", flush=True)
+    print(selection)
+
 if __name__ == "__main__":
 
+    select_tle()
     # Replace with the URL of the TLE source
     TLE_URL = "https://www.celestrak.com/NORAD/elements/stations.txt"
 
@@ -94,6 +113,8 @@ if __name__ == "__main__":
     download_tles(TLE_URL, TLE_FILENAME)
     satellites = load_tles(TLE_FILENAME)
     claverham = wgs84.latlon(51.392028,-2.79528)
+
+
 
     # Replace with the desired satellite name
     OUR_SATELLITE_NAME = "ISS (ZARYA)"
