@@ -117,8 +117,6 @@ if __name__ == "__main__":
     satellites = load_tles(TLE_FILENAME)
     claverham = wgs84.latlon(51.392028,-2.79528)
 
-
-
     # Replace with the desired satellite name
     OUR_SATELLITE_NAME = "ISS (ZARYA)"
 
