@@ -89,13 +89,14 @@ def plot_satellite_pass(observer, satellite, t, end_t):
 def select_tle():
     '''reads ./settings/tles.csv and allows user to select a source of TLEs.
     Returns the URL of the TLEs selected'''
-    
-    with open('./settings/tles.csv', newline='', mode='r') as infile:
+    with open('./settings/tles.csv', encoding="utf-8", newline='', mode='r') as infile:
         reader = csv.reader(infile)
         for rows in reader:
             tles = {rows[0]:rows[1] for rows in reader}
 
-    menu = CursesMenu.make_selection_menu(list(tles.keys()),"TLE Source", "Select TLE Source and type")
+    menu = CursesMenu.make_selection_menu(list(tles.keys()),
+                                          "TLE Source",
+                                          "Select TLE Source and type")
     menu.show()
     selection = menu.selected_option
     print("\033c", end="", flush=True)
