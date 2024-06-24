@@ -5,6 +5,7 @@ elevation minimum for passes
 '''
 import csv
 from datetime import datetime, timedelta
+import logging
 import requests
 from cursesmenu import CursesMenu
 from cursesmenu.items import FunctionItem, SubmenuItem, CommandItem
@@ -99,17 +100,18 @@ def select_tle():
                                           "Select TLE Source and type")
     menu.show()
     selection = menu.selected_option
-    print("\033c", end="", flush=True)
-    print(selection)
+    menu.refresh_screen()
+    return tles[selection][1]
 
 if __name__ == "__main__":
 
-    select_tle()
+    logging.basicConfig(level=logging.INFO)
     # Replace with the URL of the TLE source
     TLE_URL = "https://www.celestrak.com/NORAD/elements/stations.txt"
-
+    TLE_URL = select_tle()
+    logging.info(TLE_URL)
     # Replace with the desired TLE filename
-    TLE_FILENAME = "stations.tle"
+    TLE_FILENAME = "current.tle"
 
     download_tles(TLE_URL, TLE_FILENAME)
     satellites = load_tles(TLE_FILENAME)
